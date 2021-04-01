@@ -4,12 +4,38 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import validator from 'mongoose-unique-validator';
 import bcrypt from 'bcrypt';
+import passport from 'passport';
+import flash from 'express-flash';
+import session from 'express-session';
+import localStrategy from 'passport-local';
+import passportJWT from 'passport-jwt';
+import dotenv from 'dotenv';
+dotenv.config();
+
+
+// import initializePassport from './passport-config.js';
+// initializePassport(
+//     passport,
+//     email => users.find(user => user.email === email));
+
+// import apiRouter from './routes/api.js';
 
 const app = express();
 
 app.use(bodyParser.json({ limit: "30mb", extended: true }))
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
 app.use(cors());
+// app.use(flash());
+// app.use(session({
+//     session: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: false
+// }))
+
+// app.use(passport.initialize());
+// app.use(passport.session());
+
+// app.use('/api', apiRouter)
 
 const CONNECTION_URL = 'mongodb+srv://staffan5:test123@gettingstarted.hgzw7.mongodb.net/bandmatefinder?retryWrites=true&w=majority';
 const PORT = process.env.PORT || 5000;
@@ -24,12 +50,19 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    joined: {
+        type: Date,
+        default: new Date()
+    },
+    city: String,
     postalCode: String,
-    instrument: String,
+    primaryInstrument: String,
+    otherInstruments: [String],
+    genres: [String],
     skillLevel: String,
     lookingForBands: Boolean,
     lookingForPeopleToJamWith: Boolean,
-    otherInfo: String,
+    summary: String,
     gear: String,
     bands: [String],
     media: [String],
@@ -40,45 +73,7 @@ userSchema.plugin(validator);
 
 const User = mongoose.model('User', userSchema);
 
-// ===================
-
-const seedDB = () => {
-    const newUser = new User({
-        username: 'Miles Davis',
-        password: "someKindOfBlue",
-        postalCode: "00570",
-        instrument: "Trombone",
-        skillLevel: "Beginner",
-        lookingForBands: true,
-        lookingForPeopleToJamWith: true,
-        otherInfo: "I really like dogs",
-        gear: "Trombone, notestand",
-        bands: ["the Immortalities", "You again?", "Badweiser"],
-        media: ["url1", "url2", "url3"],
-        email: "miles.trombone@jazz.com"
-    });
-    newUser.save()
-
-    const newUser2 = new User({
-        username: 'Bill Haley',
-        password: "somePass",
-        postalCode: "00251",
-        instrument: "Xylophone",
-        skillLevel: "Rockstar",
-        lookingForBands: true,
-        lookingForPeopleToJamWith: false,
-        otherInfo: "I really like cats",
-        gear: "Xylophone, mallets",
-        bands: ["the Commandoes", "Why!", "The Badds"],
-        media: ["url1", "url2", "url3"],
-        email: "bill.halo@rock.fi"
-    });
-    newUser2.save()
-}
-
 // seedDB();
-
-// ===================
 
 app.post('/register', (req, res) => {
     const { username, password } = req.body;
@@ -101,11 +96,7 @@ app.post('/register', (req, res) => {
 
             res.end();
         })
-
     })
-
-
-
 })
 
 app.post('/login', (req, res) => {
@@ -149,6 +140,5 @@ app.get('/getuser/:username', (req, res) => {
 mongoose.connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true }) //returns promise
     .then(() => app.listen(PORT, () => console.log(`server running on port: ${PORT}`)))
     .catch((error) => console.log(error.message));
-
 
 mongoose.set('useFindAndModify', false);

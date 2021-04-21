@@ -7,12 +7,16 @@ const seedDB = () => {
         primaryInstrument: "Piano",
         otherInstruments: ["Drums", "Bass", "Guitar"],
         skillLevel: "Intermediate",
-        lookingForBands: true,
-        lookingForPeopleToJamWith: true,
-        summary: "I would like to start a heavy funk band! Wouldn't that be cool?",
+        lookingFor: {
+            bands: true,
+            jams: false,
+            studioWork: true,
+            songWriting: true
+        },
+        freeText: "I would like to start a heavy funk band! Wouldn't that be cool?",
         gear: "Piano and bench",
         bands: ["Band 1", "Pass the milk, please", "FunTimez"],
-        media: ["url1", "url2", "url3"],
+        mediaLink: "https://youtu.be/a2LFVWBmoiw",
         email: "mail.mail@mail.com"
     });
     newUser.save()
@@ -25,13 +29,17 @@ const seedDB = () => {
         primaryInstrument: "Drums",
         otherInstruments: ["Contrabass"],
         skillLevel: "Rockstar",
-        lookingForBands: true,
-        lookingForPeopleToJamWith: true,
-        summary: "Should we start a band?",
+        lookingFor: {
+            bands: true,
+            jams: true,
+            studioWork: false,
+            songWriting: false
+        },
+        freeText: "Life's too short to play bad solos",
         gear: "Drums and sticks",
-        bands: ["Buffalo Soldiers", "Hey, honey", "HR-department"],
-        media: ["url1", "url2", "url3"],
-        email: "mail.mail@mail.fi"
+        bands: ["Band 1", "Pass the milk, please", "FunTimez"],
+        mediaLink: "https://youtu.be/px1C7h8Z_3c",
+        email: "mail.mail@mail.com"
     });
     newUser2.save()
 
@@ -43,12 +51,16 @@ const seedDB = () => {
             primaryInstrument: "Bass",
             otherInstruments: ["Violin", "Trumpet", "Flute"],
             skillLevel: "Rockstar",
-            lookingForBands: true,
-            lookingForPeopleToJamWith: true,
-            summary: "I reaaally like 80's music.",
-            gear: "Fender Jazz Bass",
-            bands: ["The Rocketeers"],
-            media: ["url1", "url2", "url3"],
+            lookingFor: {
+                bands: true,
+                jams: false,
+                studioWork: true,
+                songWriting: true
+            },
+            freeText: "I would like to start a heavy funk band! Wouldn't that be cool?",
+            gear: "Fender Jazz Bass, Ampeg amplifier",
+            bands: ["Band 1", "Pass the milk, please", "FunTimez"],
+            mediaLink: "https://youtu.be/KYrdHW38IqA",
             email: "mail.mail@mail.com"
         });
         newUser3.save()
@@ -61,15 +73,19 @@ const seedDB = () => {
             primaryInstrument: "Electric-guitar",
             otherInstruments: ["Drums", "Cello"],
             skillLevel: "Intermediate",
-            lookingForBands: true,
-            lookingForPeopleToJamWith: true,
-            summary: "I like Big Bands and i cannot lie.",
-            gear: "Telecaster",
-            bands: ["The Picks", "The Hits", "The Sticks"],
-            media: ["url1", "url2", "url3"],
-            email: "mail.mail@mail.fi"
+            lookingFor: {
+                bands: true,
+                jams: false,
+                studioWork: true,
+                songWriting: true
+            },
+            freeText: "How can less be more? More is more.",
+            gear: "Telecaster, Fender Twin Reverb",
+            bands: ["Band 1", "Pass the milk, please", "FunTimez"],
+            mediaLink: "https://youtu.be/KYrdHW38IqA",
+            email: "mail.mail@mail.com"
         });
         newUser4.save()
 }
 
-module.exports = seedDB;
+export default seedDB;

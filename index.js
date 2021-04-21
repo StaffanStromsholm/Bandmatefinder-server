@@ -12,6 +12,14 @@ import passportJWT from 'passport-jwt';
 import dotenv from 'dotenv';
 dotenv.config();
 
+import nodeGeocoder from 'node-geocoder';
+
+let options = {
+    provider: 'here',
+    apiKey: process.env.GEOCODER_API_KEY
+};
+
+let geoCoder = nodeGeocoder(options);
 
 // import initializePassport from './passport-config.js';
 // initializePassport(
@@ -55,17 +63,24 @@ const userSchema = new mongoose.Schema({
         default: new Date()
     },
     city: String,
+    geoLocation: {
+        latitude: Number,
+        longitude: Number
+    },
     postalCode: String,
     primaryInstrument: String,
     otherInstruments: [String],
     genres: [String],
     skillLevel: String,
-    lookingForBands: Boolean,
-    lookingForPeopleToJamWith: Boolean,
-    summary: String,
+    lookingFor: {
+        bands: Boolean,
+        jams: Boolean,
+        studioWork: Boolean,
+        songWriting: Boolean
+    },
+    freeText: String,
     gear: String,
-    bands: [String],
-    media: [String],
+    mediaLink: String,
     email: String
 })
 
@@ -73,28 +88,134 @@ userSchema.plugin(validator);
 
 const User = mongoose.model('User', userSchema);
 
+const seedDB = () => {
+    const newUser = new User({
+        username: 'Harry',
+        password: "somePassword",
+        city: "Kokkola",
+        postalCode: "",
+        primaryInstrument: "Piano",
+        otherInstruments: ["Drums", "Bass", "Guitar"],
+        skillLevel: "Intermediate",
+        lookingFor: {
+            bands: true,
+            jams: false,
+            studioWork: true,
+            songWriting: true
+        },
+        freeText: "I would like to start a heavy funk band! Wouldn't that be cool?",
+        gear: "Piano and bench",
+        bands: ["Band 1", "Pass the milk, please", "FunTimez"],
+        mediaLink: "https://youtu.be/a2LFVWBmoiw",
+        email: "mail.mail@mail.com"
+    });
+    newUser.save()
+
+    const newUser2 = new User({
+        username: 'Peter Frank',
+        password: "aaaawesome",
+        city: "Rovaniemi",
+        postalCode: "",
+        primaryInstrument: "Drums",
+        otherInstruments: ["Contrabass"],
+        skillLevel: "Rockstar",
+        lookingFor: {
+            bands: true,
+            jams: true,
+            studioWork: false,
+            songWriting: false
+        },
+        freeText: "Life's too short to play bad solos",
+        gear: "Drums and sticks",
+        bands: ["Band 1", "Pass the milk, please", "FunTimez"],
+        mediaLink: "https://youtu.be/px1C7h8Z_3c",
+        email: "mail.mail@mail.com"
+    });
+    newUser2.save()
+
+     const newUser3 = new User({
+            username: 'Jessy Harris',
+            password: "ksjhdf",
+            city: "Helsinki",
+            postalCode: "00570",
+            primaryInstrument: "Bass",
+            otherInstruments: ["Violin", "Trumpet", "Flute"],
+            skillLevel: "Rockstar",
+            lookingFor: {
+                bands: true,
+                jams: false,
+                studioWork: true,
+                songWriting: true
+            },
+            freeText: "I would like to start a heavy funk band! Wouldn't that be cool?",
+            gear: "Fender Jazz Bass, Ampeg amplifier",
+            bands: ["Band 1", "Pass the milk, please", "FunTimez"],
+            mediaLink: "https://youtu.be/KYrdHW38IqA",
+            email: "mail.mail@mail.com"
+        });
+        newUser3.save()
+    
+        const newUser4 = new User({
+            username: 'Amy Parks',
+            password: "oa09sd",
+            city: "Espoo",
+            postalCode: "",
+            primaryInstrument: "Electric-guitar",
+            otherInstruments: ["Drums", "Cello"],
+            skillLevel: "Intermediate",
+            lookingFor: {
+                bands: true,
+                jams: false,
+                studioWork: true,
+                songWriting: true
+            },
+            freeText: "How can less be more? More is more.",
+            gear: "Telecaster, Fender Twin Reverb",
+            bands: ["Band 1", "Pass the milk, please", "FunTimez"],
+            mediaLink: "https://youtu.be/KYrdHW38IqA",
+            email: "mail.mail@mail.com"
+        });
+        newUser4.save()
+}
+
 // seedDB();
 
-app.post('/register', (req, res) => {
-    const { username, password } = req.body;
+app.post('/register', async(req, res) => {
+    const { username, password, confirmPassword, city, Instrument, skillLevel, lookingFor, freeText } = req.body;
+
+    if(passwordsDontMatch(password, confirmPassword)){
+        return res.status(400).send(`passwords don't match`)
+    }
+
+    const geocodedLocation = await geoCoder.geocode(`${city}`)
+    console.log(geocodedLocation);
+
+    const geoLocation = {latitude: geocodedLocation[0].latitude, longitude: geocodedLocation[0].longitude}
+
+    console.log(geoLocation);
 
     bcrypt.genSalt(10, (err, salt) => {
         bcrypt.hash(password, salt, (err, hashedPassword) => {
             const newUser = new User({
                 username,
-                password: hashedPassword
+                password: hashedPassword,
+                confirmPassword,
+                city,
+                geoLocation,
+                Instrument,
+                skillLevel,
+                lookingFor,
+                freeText
             });
             newUser.save()
                 .then(() => {
-                    console.log('registered new user')
-                    res.status(200).send();
+                    return res.status(200).send(`new User registered`);
                 })
                 .catch(err => {
-                    console.log('An error has occured while registering a new user')
-                    res.status(500).send();
+                    return res.status(500).send(`An error occured while registering a new user`);
                 })
 
-            res.end();
+            // res.end();
         })
     })
 })
@@ -142,3 +263,11 @@ mongoose.connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: tr
     .catch((error) => console.log(error.message));
 
 mongoose.set('useFindAndModify', false);
+
+function passwordsDontMatch(password, confirmPassword) {
+    if(password !== confirmPassword){
+        return true;
+    } else {
+        return false;
+    }
+}

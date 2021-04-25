@@ -4,11 +4,11 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import validator from 'mongoose-unique-validator';
 import bcrypt from 'bcrypt';
-import passport from 'passport';
-import flash from 'express-flash';
-import session from 'express-session';
-import localStrategy from 'passport-local';
-import passportJWT from 'passport-jwt';
+// import passport from 'passport';
+// import flash from 'express-flash';
+// import session from 'express-session';
+// import localStrategy from 'passport-local';
+// import passportJWT from 'passport-jwt';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -181,7 +181,7 @@ const seedDB = () => {
 // seedDB();
 
 app.post('/register', async(req, res) => {
-    const { username, password, confirmPassword, city, Instrument, skillLevel, lookingFor, freeText } = req.body;
+    const { username, password, confirmPassword, city, primaryInstrument, skillLevel, lookingFor, freeText } = req.body;
 
     if(passwordsDontMatch(password, confirmPassword)){
         return res.status(400).send(`passwords don't match`)
@@ -202,7 +202,7 @@ app.post('/register', async(req, res) => {
                 confirmPassword,
                 city,
                 geoLocation,
-                Instrument,
+                primaryInstrument,
                 skillLevel,
                 lookingFor,
                 freeText
@@ -220,7 +220,8 @@ app.post('/register', async(req, res) => {
     })
 })
 
-app.post('/login', (req, res) => {
+//new login code
+app.use('/login', (req, res) => {
     const { username, password } = req.body;
 
     User.findOne({ username }, (err, user) => {
@@ -238,10 +239,37 @@ app.post('/login', (req, res) => {
         bcrypt.compare(password, user.password, (err, result) => {
             if (err) res.status(500).send();
             if (!result) res.status(403).send();
-            else res.status(200).send();
+            else res.status(200).send({
+                token: 'myAwesomeToken',
+                user: username
+              });
         })
     })
-})
+});
+
+//old code
+// app.post('/login', (req, res) => {
+//     const { username, password } = req.body;
+
+//     User.findOne({ username }, (err, user) => {
+//         if (err) {
+//             console.log('an error has occured')
+//             res.status(500).send()
+//             return;
+//         }
+
+//         if (!user) {
+//             res.status(403).send();
+//             return;
+//         }
+
+//         bcrypt.compare(password, user.password, (err, result) => {
+//             if (err) res.status(500).send();
+//             if (!result) res.status(403).send();
+//             else res.status(200).send();
+//         })
+//     })
+// })
 
 app.get('/getall', (req, res)=>{
     User.find({}, (err, users)=>{

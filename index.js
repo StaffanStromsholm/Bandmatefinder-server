@@ -5,7 +5,34 @@ import cors from 'cors';
 import validator from 'mongoose-unique-validator';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
+import path from 'path';
+import crypto from 'crypto';
+import multer from 'multer';
+import GridFsStorage from 'multer-gridfs-storage';
+import Grid from 'gridfs-stream';
+import pkg from 'uuid';
+const { v4: uuidv4 } = pkg;
 dotenv.config();
+
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, 'images');
+    },
+    filename: function(req, file, cb) {   
+        cb(null, uuidv4() + '-' + Date.now() + path.extname(file.originalname));
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    const allowedFileTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if(allowedFileTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(null, false);
+    }
+}
+
+let upload = multer({ storage, fileFilter });
 
 import nodeGeocoder from 'node-geocoder';
 
@@ -22,46 +49,6 @@ app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
 app.use(cors());
 const CONNECTION_URL = 'mongodb+srv://staffan5:test123@gettingstarted.hgzw7.mongodb.net/bandmatefinder?retryWrites=true&w=majority';
 const PORT = process.env.PORT || 5000;
-
-const userSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        unique: true,
-        required: true
-    },
-    password: {
-        type: String,
-        required: true
-    },
-    joined: {
-        type: Date,
-        default: new Date()
-    },
-    city: String,
-    geoLocation: {
-        latitude: Number,
-        longitude: Number
-    },
-    postalCode: String,
-    primaryInstrument: String,
-    otherInstruments: [String],
-    genres: [String],
-    skillLevel: String,
-    lookingFor: {
-        bands: Boolean,
-        jams: Boolean,
-        studioWork: Boolean,
-        songWriting: Boolean
-    },
-    freeText: String,
-    gear: String,
-    mediaLink: String,
-    email: String
-})
-
-userSchema.plugin(validator);
-
-const User = mongoose.model('User', userSchema);
 
 const seedDB = () => {
     const newUser = new User({
@@ -155,8 +142,11 @@ const seedDB = () => {
 
 // seedDB();
 
-app.post('/register', async(req, res) => {
+app.post('/register', upload.single('photo'), async(req, res) => {
     const { username, password, confirmPassword, city, primaryInstrument, skillLevel, lookingFor, freeText } = req.body;
+    console.log('req: '+ req.file);
+
+    return
 
     if(passwordsDontMatch(password, confirmPassword)){
         return res.status(400).send(`passwords don't match`)
@@ -172,6 +162,7 @@ app.post('/register', async(req, res) => {
     bcrypt.genSalt(10, (err, salt) => {
         bcrypt.hash(password, salt, (err, hashedPassword) => {
             const newUser = new User({
+                photo,
                 username,
                 password: hashedPassword,
                 confirmPassword,
@@ -196,6 +187,8 @@ app.post('/register', async(req, res) => {
 //new login code
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
+
+    console.log(username, password);
 
     User.findOne({ username }, (err, user) => {
         if (err) {
@@ -246,6 +239,7 @@ app.patch('/user/:id', async(req, res) => {
 
     res.json({updatedUser, message: 'update ok'});
 })
+
 
 mongoose.connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true }) //returns promise
     .then(() => app.listen(PORT, () => console.log(`server running on port: ${PORT}`)))

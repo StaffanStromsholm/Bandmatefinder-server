@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import validator from 'mongoose-unique-validator';
+
 
 const userSchema = new mongoose.Schema({
     photo: {

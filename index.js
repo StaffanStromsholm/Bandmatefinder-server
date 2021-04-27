@@ -2,16 +2,22 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import validator from 'mongoose-unique-validator';
-import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
+import bcrypt from 'bcrypt';
 import path from 'path';
 import crypto from 'crypto';
 import multer from 'multer';
 import GridFsStorage from 'multer-gridfs-storage';
 import Grid from 'gridfs-stream';
 import pkg from 'uuid';
+import User from './models/user.js';
 const { v4: uuidv4 } = pkg;
+
+import userRoutes from './routes/users.js';
+
+const app = express();
+
+app.use(cors());
 dotenv.config();
 
 const storage = multer.diskStorage({
@@ -34,155 +40,10 @@ const fileFilter = (req, file, cb) => {
 
 let upload = multer({ storage, fileFilter });
 
-import nodeGeocoder from 'node-geocoder';
-
-let options = {
-    provider: 'here',
-    apiKey: process.env.GEOCODER_API_KEY
-};
-
-let geoCoder = nodeGeocoder(options);
-const app = express();
-
 app.use(bodyParser.json({ limit: "30mb", extended: true }))
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
-app.use(cors());
 const CONNECTION_URL = 'mongodb+srv://staffan5:test123@gettingstarted.hgzw7.mongodb.net/bandmatefinder?retryWrites=true&w=majority';
 const PORT = process.env.PORT || 5000;
-
-const seedDB = () => {
-    const newUser = new User({
-        username: 'Harry',
-        password: "somePassword",
-        city: "Kokkola",
-        postalCode: "",
-        primaryInstrument: "Piano",
-        otherInstruments: ["Drums", "Bass", "Guitar"],
-        skillLevel: "Intermediate",
-        lookingFor: {
-            bands: true,
-            jams: false,
-            studioWork: true,
-            songWriting: true
-        },
-        freeText: "I would like to start a heavy funk band! Wouldn't that be cool?",
-        gear: "Piano and bench",
-        bands: ["Band 1", "Pass the milk, please", "FunTimez"],
-        mediaLink: "https://youtu.be/a2LFVWBmoiw",
-        email: "mail.mail@mail.com"
-    });
-    newUser.save()
-
-    const newUser2 = new User({
-        username: 'Peter Frank',
-        password: "aaaawesome",
-        city: "Rovaniemi",
-        postalCode: "",
-        primaryInstrument: "Drums",
-        otherInstruments: ["Contrabass"],
-        skillLevel: "Rockstar",
-        lookingFor: {
-            bands: true,
-            jams: true,
-            studioWork: false,
-            songWriting: false
-        },
-        freeText: "Life's too short to play bad solos",
-        gear: "Drums and sticks",
-        bands: ["Band 1", "Pass the milk, please", "FunTimez"],
-        mediaLink: "https://youtu.be/px1C7h8Z_3c",
-        email: "mail.mail@mail.com"
-    });
-    newUser2.save()
-
-     const newUser3 = new User({
-            username: 'Jessy Harris',
-            password: "ksjhdf",
-            city: "Helsinki",
-            postalCode: "00570",
-            primaryInstrument: "Bass",
-            otherInstruments: ["Violin", "Trumpet", "Flute"],
-            skillLevel: "Rockstar",
-            lookingFor: {
-                bands: true,
-                jams: false,
-                studioWork: true,
-                songWriting: true
-            },
-            freeText: "I would like to start a heavy funk band! Wouldn't that be cool?",
-            gear: "Fender Jazz Bass, Ampeg amplifier",
-            bands: ["Band 1", "Pass the milk, please", "FunTimez"],
-            mediaLink: "https://youtu.be/KYrdHW38IqA",
-            email: "mail.mail@mail.com"
-        });
-        newUser3.save()
-    
-        const newUser4 = new User({
-            username: 'Amy Parks',
-            password: "oa09sd",
-            city: "Espoo",
-            postalCode: "",
-            primaryInstrument: "Electric-guitar",
-            otherInstruments: ["Drums", "Cello"],
-            skillLevel: "Intermediate",
-            lookingFor: {
-                bands: true,
-                jams: false,
-                studioWork: true,
-                songWriting: true
-            },
-            freeText: "How can less be more? More is more.",
-            gear: "Telecaster, Fender Twin Reverb",
-            bands: ["Band 1", "Pass the milk, please", "FunTimez"],
-            mediaLink: "https://youtu.be/KYrdHW38IqA",
-            email: "mail.mail@mail.com"
-        });
-        newUser4.save()
-}
-
-// seedDB();
-
-app.post('/register', upload.single('photo'), async(req, res) => {
-    const { username, password, confirmPassword, city, primaryInstrument, skillLevel, lookingFor, freeText } = req.body;
-    console.log('req: '+ req.file);
-
-    return
-
-    if(passwordsDontMatch(password, confirmPassword)){
-        return res.status(400).send(`passwords don't match`)
-    }
-
-    const geocodedLocation = await geoCoder.geocode(`${city}`)
-    console.log(geocodedLocation);
-
-    const geoLocation = {latitude: geocodedLocation[0].latitude, longitude: geocodedLocation[0].longitude}
-
-    console.log(geoLocation);
-
-    bcrypt.genSalt(10, (err, salt) => {
-        bcrypt.hash(password, salt, (err, hashedPassword) => {
-            const newUser = new User({
-                photo,
-                username,
-                password: hashedPassword,
-                confirmPassword,
-                city,
-                geoLocation,
-                primaryInstrument,
-                skillLevel,
-                lookingFor,
-                freeText
-            });
-            newUser.save()
-                .then(() => {
-                    return res.status(200).send(`new User registered`);
-                })
-                .catch(err => {
-                    return res.status(500).send(`An error occured while registering a new user`);
-                })
-        })
-    })
-})
 
 //new login code
 app.post('/login', (req, res) => {
@@ -213,33 +74,7 @@ app.post('/login', (req, res) => {
     })
 });
 
-app.get('/getall', (req, res)=>{
-    User.find({}, (err, users)=>{
-        if(err) console.log(err);
-        else res.json(users);
-    })
-})
-
-app.get('/getuser/:username', (req, res) => {
-    const { username } = req.params;
-    User.findOne({username}, (err, user) => {
-        if(err) console.log(err);
-        res.json({user});
-    })
-})
-
-app.patch('/user/:id', async(req, res) => {
-    const { id } = req.params;
-    const { username, password, city, postalCode, primaryInstrument, freeText, skillLevel, lookingFor } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No user with id: ${_id}`);
-
-    const updatedUser = {id, username, password, city, postalCode, primaryInstrument, freeText, skillLevel, lookingFor, _id: id}
-    await User.findByIdAndUpdate(id, updatedUser, { new: true })
-
-    res.json({updatedUser, message: 'update ok'});
-})
-
+app.use('/users', userRoutes);
 
 mongoose.connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true }) //returns promise
     .then(() => app.listen(PORT, () => console.log(`server running on port: ${PORT}`)))

@@ -42,7 +42,7 @@ let upload = multer({ storage, fileFilter });
 
 app.use(bodyParser.json({ limit: "30mb", extended: true }))
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
-const CONNECTION_URL = 'mongodb+srv://staffan5:test123@gettingstarted.hgzw7.mongodb.net/bandmatefinder?retryWrites=true&w=majority';
+const CONNECTION_URL = process.env.ATLAS_URL;
 const PORT = process.env.PORT || 5000;
 
 //new login code

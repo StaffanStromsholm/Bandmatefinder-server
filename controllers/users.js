@@ -47,7 +47,7 @@ export const getUser = async (req, res) => {
 
 
 export const createUser = async (req, res) => {
-    const { username, password, confirmPassword, city, primaryInstrument, skillLevel, lookingFor, freeText } = req.body;
+    const { username, password, confirmPassword, city, primaryInstrument, skillLevel, lookingFor, freeText, email, mediaLink } = req.body;
 
     if ((!password || !confirmPassword) || password !== confirmPassword) {
         return res.status(400).json({ message: `password problem` })
@@ -66,7 +66,9 @@ export const createUser = async (req, res) => {
                 primaryInstrument,
                 skillLevel,
                 lookingFor,
-                freeText
+                freeText,
+                mediaLink,
+                email
             });
             newUser.save()
                 .then(() => {

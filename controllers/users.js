@@ -47,13 +47,13 @@ export const getUser = async (req, res) => {
 
 
 export const createUser = async (req, res) => {
-    const { username, password, confirmPassword, city, primaryInstrument, skillLevel, lookingFor, freeText, email, mediaLink } = req.body;
+    const { username, password, confirmPassword, city, postalCode, primaryInstrument, skillLevel, lookingFor, freeText, email, mediaLink } = req.body;
 
     if ((!password || !confirmPassword) || password !== confirmPassword) {
         return res.status(400).json({ message: `password problem` })
     }
 
-    const geoLocation = await getGeoLocation(city);
+    const geoLocation = await getGeoLocation(city, postalCode);
 
     bcrypt.genSalt(10, (err, salt) => {
         bcrypt.hash(password, salt, (err, hashedPassword) => {
@@ -62,6 +62,7 @@ export const createUser = async (req, res) => {
                 username,
                 password: hashedPassword,
                 city,
+                postalCode,
                 geoLocation,
                 primaryInstrument,
                 skillLevel,
@@ -101,40 +102,6 @@ export const updateUser = async (req, res) => {
     await User.findByIdAndUpdate(id, updatedUser, { new: true })
 
     res.json({ updatedUser, message: 'update ok' });
-    //     const { id } = req.params;
-    //     const { username, password, city, postalCode, primaryInstrument, freeText, skillLevel, lookingFor } = req.body;
-
-    //     if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No user with id: ${id}`);
-
-    //     // if((!password || !confirmPassword) || password !== confirmPassword ){
-    //     //     return res.status(400).json({message: `password problem`})
-    //     // }
-
-    //     let geoLocation;
-
-    //     if(city) {
-    //     geoLocation = await getGeoLocation(city);
-    // }
-
-
-    //     // const updatedUser = { username, password, city, postalCode, primaryInstrument, freeText, skillLevel, lookingFor}
-
-    //     bcrypt.genSalt(10, (err, salt) => {
-    //         bcrypt.hash(password, salt, (err, hashedPassword) => {
-    //             const updatedUser = new User({
-    //                 // photo,
-    //                 username,
-    //                 password: hashedPassword,
-    //                 city,
-    //                 geoLocation,
-    //                 primaryInstrument,
-    //                 skillLevel,
-    //                 lookingFor,
-    //                 freeText
-    //             });
-    //             User.findByIdAndUpdate(id, updatedUser, () => res.json({updatedUser, message: 'update ok'}))
-    //         })
-    //     })
 }
 
 
@@ -145,7 +112,7 @@ export const updateUser = async (req, res) => {
 
 export default router;
 
-async function getGeoLocation(city) {
-    const geocodedLocation = await geoCoder.geocode(`${city}`)
+async function getGeoLocation(city, postalCode) {
+    const geocodedLocation = await geoCoder.geocode(`${city} ${postalCode}`)
     return ({ latitude: geocodedLocation[0].latitude, longitude: geocodedLocation[0].longitude })
 }

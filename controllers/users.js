@@ -81,13 +81,15 @@ export const createUser = async (req, res) => {
     })
 }
 
+//========== updateUser ============
+
 export const updateUser = async (req, res) => {
     const { id } = req.params;
-    const { username, password, city, postalCode, primaryInstrument, freeText, skillLevel, lookingFor } = req.body;
+    const { username, city, postalCode, primaryInstrument, freeText, skillLevel, lookingFor } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) return res.status(404).send(`No user with id: ${_id}`);
 
-    const updatedUser = { id, username, password, city, postalCode, primaryInstrument, freeText, skillLevel, lookingFor, _id: id }
+    const updatedUser = { id, username, city, postalCode, primaryInstrument, freeText, skillLevel, lookingFor, _id: id }
     
     let geoLocation;
 

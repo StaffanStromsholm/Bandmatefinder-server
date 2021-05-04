@@ -38,7 +38,13 @@ const userSchema = new mongoose.Schema({
     freeText: String,
     gear: String,
     mediaLink: String,
-    email: String
+    email: String,
+    comments: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Comment"
+        }
+    ],
 })
 
 userSchema.plugin(validator);

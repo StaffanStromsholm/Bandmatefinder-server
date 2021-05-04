@@ -35,7 +35,7 @@ export const getUser = async (req, res) => {
     const { username } = req.params;
 
     try {
-        const user = await User.findOne({ username })
+        const user = await User.findOne({ username }).populate('comments');
 
         res.status(200).json(user);
     } catch (error) {

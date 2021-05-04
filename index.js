@@ -14,6 +14,7 @@ import User from './models/user.js';
 const { v4: uuidv4 } = pkg;
 
 import userRoutes from './routes/users.js';
+import commentRoutes from './routes/comments.js'
 
 const app = express();
 
@@ -75,6 +76,10 @@ app.post('/login', (req, res) => {
 });
 
 app.use('/users', userRoutes);
+app.use('/users/:id/comments', commentRoutes);
+// app.post('/comments/:id', (req, res) => {
+//     console.log(req.params.id)
+// })
 
 mongoose.connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true }) //returns promise
     .then(() => app.listen(PORT, () => console.log(`server running on port: ${PORT}`)))

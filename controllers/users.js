@@ -104,12 +104,6 @@ export const updateUser = async (req, res) => {
     res.json({ updatedUser, message: 'update ok' });
 }
 
-
-
-// upload.single('photo'),
-
-
-
 export default router;
 
 async function getGeoLocation(city, postalCode) {
